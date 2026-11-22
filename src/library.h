@@ -2,6 +2,8 @@
 
 #include <QObject>
 #include <QUrlQuery>
+#include <functional>
+#include <memory>
 
 #include "itemmodel.h"
 
@@ -37,6 +39,13 @@ public:
     // it, so going back frees it.
     Q_INVOKABLE ItemModel *tracksOf(const QString &id, int kind);
     Q_INVOKABLE ItemModel *albumsBy(const QString &artistId);
+    // Every track of a set of discs, disc by disc.
+    Q_INVOKABLE ItemModel *tracksOfSet(const QStringList &albumIds);
+    // The album, or set of discs, that an album id belongs to, as a row of
+    // the albums list; empty if it isn't loaded.
+    Q_INVOKABLE QVariantMap setContaining(const QString &albumId) const;
+
+    static QList<Item> orderSetTracks(const QStringList &albumIds, QList<Item> tracks);
 
     // Jellyfin returns a page as {"Items": [...]}; some endpoints return a
     // bare array. Both parse here, keeping only kinds a music player shows.
@@ -46,7 +55,10 @@ signals:
     void searchTermChanged();
 
 private:
-    void fetchAll(ItemModel *model, const QString &path, QUrlQuery query, int start = 0);
+    using Transform = std::function<QList<Item>(const QList<Item> &)>;
+    void fetchAll(ItemModel *model, const QString &path, QUrlQuery query, Transform transform = {});
+    void fetchPage(ItemModel *model, const QString &path, const QUrlQuery &query, Transform transform,
+                   std::shared_ptr<QList<Item>> raw, int start);
     QUrlQuery baseQuery() const;
     void clear();
 

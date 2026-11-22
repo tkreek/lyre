@@ -101,5 +101,10 @@
     "one": "%n piste ajoutée à la file",
     "many": "%n de pistes ajoutées à la file",
     "other": "%n pistes ajoutées à la file"
+  },
+  "%n discs": {
+    "one": "%n disque",
+    "many": "%n de disques",
+    "other": "%n disques"
   }
 }

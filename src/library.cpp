@@ -46,10 +46,16 @@ QUrlQuery Library::baseQuery() const {
     return query;
 }
 
-void Library::fetchAll(ItemModel *model, const QString &path, QUrlQuery query, int start) {
+void Library::fetchAll(ItemModel *model, const QString &path, QUrlQuery query, Transform transform) {
     model->setLoading(true);
-    if (start == 0)
-        model->setError({});
+    model->setError({});
+    fetchPage(model, path, query, std::move(transform), std::make_shared<QList<Item>>(), 0);
+}
+
+// Pages accumulate in `raw`, and each one redraws the model from all of it,
+// so a transform like grouping discs sees every album fetched so far.
+void Library::fetchPage(ItemModel *model, const QString &path, const QUrlQuery &query, Transform transform,
+                        std::shared_ptr<QList<Item>> raw, int start) {
     QUrlQuery page = query;
     page.addQueryItem("StartIndex", QString::number(start));
     page.addQueryItem("Limit", QString::number(pageSize));
@@ -65,13 +71,10 @@ void Library::fetchAll(ItemModel *model, const QString &path, QUrlQuery query, i
             emit model->loaded();
             return;
         }
-        const QList<Item> items = parseItems(json);
-        if (start == 0)
-            model->setItems(items);
-        else
-            model->insert(model->count(), items);
+        *raw += parseItems(json);
+        model->setItems(transform ? transform(*raw) : *raw);
         if (json.isObject() && json.object().value("Items").toArray().size() == pageSize) {
-            fetchAll(model, path, query, start + pageSize);
+            fetchPage(model, path, query, transform, raw, start + pageSize);
             return;
         }
         model->setLoading(false);
@@ -87,7 +90,9 @@ void Library::loadAlbums(bool force) {
     query.addQueryItem("Recursive", "true");
     query.addQueryItem("SortBy", "SortName");
     query.addQueryItem("SortOrder", "Ascending");
-    fetchAll(&m_albums, "/Items", query);
+    query.removeAllQueryItems("Fields");
+    query.addQueryItem("Fields", "ProductionYear,ChildCount,Path");
+    fetchAll(&m_albums, "/Items", query, &Item::groupDiscSets);
 }
 
 void Library::loadArtists(bool force) {
@@ -135,6 +140,8 @@ void Library::search(const QString &input) {
     query.addQueryItem("IncludeItemTypes", "MusicArtist,MusicAlbum,Audio,Playlist");
     query.addQueryItem("Recursive", "true");
     query.addQueryItem("Limit", "80");
+    query.removeAllQueryItems("Fields");
+    query.addQueryItem("Fields", "ProductionYear,ChildCount,Path");
     m_search.setLoading(true);
     m_search.setError({});
     m_jellyfin->get("/Items", query, this, [=, this](const QJsonDocument &json, const QString &error) {
@@ -156,6 +163,14 @@ void Library::search(const QString &input) {
         };
         std::stable_sort(items.begin(), items.end(),
                          [&](const Item &a, const Item &b) { return rank(a) < rank(b); });
+        // The discs of a set found by one search show as the set.
+        QList<Item> albums, rest;
+        for (const auto &item : std::as_const(items))
+            (item.kind == Item::Album ? albums : rest) << item;
+        int firstAlbum = 0;
+        while (firstAlbum < items.size() && rank(items.at(firstAlbum)) < 1)
+            ++firstAlbum;
+        items = rest.mid(0, firstAlbum) + Item::groupDiscSets(albums) + rest.mid(firstAlbum);
         m_search.setItems(items);
         emit m_search.loaded();
     });
@@ -181,9 +196,48 @@ ItemModel *Library::tracksOf(const QString &id, int kind) {
         query.addQueryItem("IncludeItemTypes", "Audio");
         query.addQueryItem("Recursive", "true");
         query.addQueryItem("SortBy", "ParentIndexNumber,IndexNumber,SortName");
-        fetchAll(model, "/Items", query);
+        query.removeAllQueryItems("Fields");
+        query.addQueryItem("Fields", "ProductionYear,ChildCount,Path");
+        fetchAll(model, "/Items", query, &Item::sortAlbumTracks);
     }
     return model;
+}
+
+ItemModel *Library::tracksOfSet(const QStringList &albumIds) {
+    if (albumIds.size() == 1)
+        return tracksOf(albumIds.first(), Item::Album);
+    auto *model = new ItemModel;
+    QQmlEngine::setObjectOwnership(model, QQmlEngine::JavaScriptOwnership);
+    QUrlQuery query = baseQuery();
+    query.addQueryItem("AlbumIds", albumIds.join(','));
+    query.addQueryItem("IncludeItemTypes", "Audio");
+    query.addQueryItem("Recursive", "true");
+    query.addQueryItem("SortBy", "ParentIndexNumber,IndexNumber,SortName");
+    query.removeAllQueryItems("Fields");
+    query.addQueryItem("Fields", "ProductionYear,ChildCount,Path");
+    fetchAll(model, "/Items", query, [albumIds](const QList<Item> &tracks) {
+        return orderSetTracks(albumIds, tracks);
+    });
+    return model;
+}
+
+// Each album of a set is one disc: its tracks are numbered as that disc and
+// follow the discs before it, whatever disc tags the files carry.
+QList<Item> Library::orderSetTracks(const QStringList &albumIds, QList<Item> tracks) {
+    for (auto &track : tracks) {
+        const int at = albumIds.indexOf(track.albumId);
+        track.disc = at < 0 ? albumIds.size() + 1 : at + 1;
+    }
+    return Item::sortAlbumTracks(tracks);
+}
+
+QVariantMap Library::setContaining(const QString &albumId) const {
+    for (int row = 0; row < m_albums.count(); ++row) {
+        const Item &album = m_albums.items().at(row);
+        if (album.id == albumId || album.members.contains(albumId))
+            return m_albums.get(row);
+    }
+    return {};
 }
 
 ItemModel *Library::albumsBy(const QString &artistId) {
@@ -195,7 +249,9 @@ ItemModel *Library::albumsBy(const QString &artistId) {
     query.addQueryItem("AlbumArtistIds", artistId);
     query.addQueryItem("SortBy", "ProductionYear,SortName");
     query.addQueryItem("SortOrder", "Descending,Ascending");
-    fetchAll(model, "/Items", query);
+    query.removeAllQueryItems("Fields");
+    query.addQueryItem("Fields", "ProductionYear,ChildCount,Path");
+    fetchAll(model, "/Items", query, &Item::groupDiscSets);
     return model;
 }
 

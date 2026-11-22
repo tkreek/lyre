@@ -98,5 +98,9 @@
   "Added %n tracks to the queue": {
     "one": "%n Titel zur Warteschlange hinzugefügt",
     "other": "%n Titel zur Warteschlange hinzugefügt"
+  },
+  "%n discs": {
+    "one": "%n CD",
+    "other": "%n CDs"
   }
 }

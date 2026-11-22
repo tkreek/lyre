@@ -16,8 +16,11 @@ FocusScope {
     property string imageTag
     property int year: 0
     property int childCount: 0
+    // The discs' album ids when this is a set of discs shown as one album.
+    property var members: []
+    readonly property bool isSet: members.length > 1
     // Owned by this page, so going back frees the track list.
-    property var sourceModel: library.tracksOf(itemId, kind)
+    property var sourceModel: isSet ? library.tracksOfSet(members) : library.tracksOf(itemId, kind)
     property alias currentIndex: list.currentIndex
     readonly property bool isQueue: false
     readonly property bool isPlaylist: kind === 4
@@ -136,6 +139,8 @@ FocusScope {
                             var parts = []
                             if (page.year > 0)
                                 parts.push(page.year)
+                            if (page.isSet)
+                                parts.push(qsTr("%n discs", "", page.members.length))
                             if (page.sourceModel.count > 0) {
                                 parts.push(qsTr("%n tracks", "", page.sourceModel.count))
                                 parts.push(qsTr("%n min", "", Math.round(page.sourceModel.totalDurationMs / 60000)))

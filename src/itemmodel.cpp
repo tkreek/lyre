@@ -25,6 +25,8 @@ QVariant ItemModel::data(const QModelIndex &index, int role) const {
     case DurationRole: return item.durationMs;
     case ImageIdRole: return item.imageId;
     case ImageTagRole: return item.imageTag;
+    case MembersRole: return item.members;
+    case DiscCountRole: return int(item.members.size());
     }
     return {};
 }
@@ -36,6 +38,7 @@ QHash<int, QByteArray> ItemModel::roleNames() const {
         {YearRole, "year"},       {IndexRole, "trackNumber"}, {DiscRole, "disc"},
         {ChildCountRole, "childCount"}, {DurationRole, "duration"},
         {ImageIdRole, "imageId"}, {ImageTagRole, "imageTag"},
+        {MembersRole, "members"}, {DiscCountRole, "discCount"},
     };
 }
 

@@ -57,7 +57,7 @@ ApplicationWindow {
     function openItem(item) {
         const props = { itemId: item.itemId, kind: item.kind, name: item.name, subtitle: item.artist || "",
                         imageId: item.imageId || "", imageTag: item.imageTag || "", year: item.year || 0,
-                        childCount: item.childCount || 0 }
+                        childCount: item.childCount || 0, members: item.members || [] }
         if (item.kind === 3)
             stack.push(artistPage, props)
         else if (item.kind === 2 || item.kind === 4)
@@ -65,12 +65,17 @@ ApplicationWindow {
         focusPage()
     }
 
+    // Opens the playing track's album, or the whole set of discs it's on.
     function goToPlaying() {
         if (!player.hasTrack || !player.albumId)
             return
+        const set = library.setContaining(player.albumId)
         showSection("albums")
-        openItem({ itemId: player.albumId, kind: 2, name: player.album, artist: player.artist,
-                   imageId: player.imageId, imageTag: player.imageTag })
+        if (set.itemId)
+            openItem(set)
+        else
+            openItem({ itemId: player.albumId, kind: 2, name: player.album, artist: player.artist,
+                       imageId: player.imageId, imageTag: player.imageTag })
     }
 
     // ------------------------------------------------------------ actions on the selection
@@ -99,14 +104,14 @@ ApplicationWindow {
         if (!item) return
         if (page.isQueue) player.playAt(page.currentIndex)
         else if (item.kind === 1) player.playFrom(page.sourceModel, page.currentIndex)
-        else player.playContainer(item.itemId, item.kind, false)
+        else player.playContainer(item.itemId, item.kind, false, item.members || [])
     }
 
     function queueSelected(next) {
         const item = selected()
         if (!item || page.isQueue) return
         if (item.kind === 1) player.addToQueue(page.sourceModel, page.currentIndex, next)
-        else player.addContainer(item.itemId, item.kind, next)
+        else player.addContainer(item.itemId, item.kind, next, item.members || [])
     }
 
     Connections {

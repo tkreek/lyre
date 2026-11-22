@@ -58,6 +58,7 @@ GridView {
         required property int kind
         required property int childCount
         required property int year
+        required property int discCount
         width: grid.cellWidth
         height: grid.cellHeight
         readonly property bool selected: GridView.isCurrentItem && grid.activeFocus
@@ -74,6 +75,27 @@ GridView {
             highlighted: card.selected || hover.hovered
             scale: hover.hovered ? 1.015 : 1
             Behavior on scale { NumberAnimation { duration: 120 } }
+        }
+
+        // A set of discs says so on its cover, where a long artist name
+        // can't push it out of sight.
+        Rectangle {
+            visible: card.discCount > 1
+            anchors.right: art.right
+            anchors.bottom: art.bottom
+            anchors.margins: 8
+            width: discs.implicitWidth + 12
+            height: discs.implicitHeight + 6
+            radius: Math.min(4, theme.radius)
+            color: Qt.alpha(theme.background, 0.88)
+            Label {
+                id: discs
+                anchors.centerIn: parent
+                text: qsTr("%n discs", "", card.discCount)
+                color: theme.foreground
+                font.pixelSize: theme.fontSize - 3
+                font.weight: Font.DemiBold
+            }
         }
 
         MarqueeLabel {
@@ -99,9 +121,16 @@ GridView {
             horizontalAlignment: title.horizontalAlignment
             color: theme.muted
             font.pixelSize: theme.fontSize - 2
-            text: card.kind === 4 ? qsTr("%n tracks", "", card.childCount)
-                : card.kind === 2 ? (card.year > 0 && card.artist ? card.artist + " · " + card.year : card.artist)
-                : ""
+            text: {
+                if (card.kind === 4)
+                    return qsTr("%n tracks", "", card.childCount)
+                if (card.kind !== 2)
+                    return ""
+                const parts = card.artist ? [card.artist] : []
+                if (card.year > 0)
+                    parts.push(card.year)
+                return parts.join(" · ")
+            }
         }
 
         HoverHandler { id: hover; cursorShape: Qt.PointingHandCursor }

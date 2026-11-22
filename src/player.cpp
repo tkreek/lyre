@@ -170,10 +170,11 @@ void Player::addToQueue(ItemModel *model, int index, bool next) {
         go(0, false);
 }
 
-void Player::withTracks(const QString &id, int kind, std::function<void(const QList<Item> &)> use) {
+void Player::withTracks(const QString &id, int kind, const QStringList &members,
+                        std::function<void(const QList<Item> &)> use) {
     // The model is the player's while it loads, so a page closing or the
     // QML garbage collector can't take it away first.
-    ItemModel *model = m_library->tracksOf(id, kind);
+    ItemModel *model = members.size() > 1 ? m_library->tracksOfSet(members) : m_library->tracksOf(id, kind);
     QQmlEngine::setObjectOwnership(model, QQmlEngine::CppOwnership);
     model->setParent(this);
     auto done = [this, model, use] {
@@ -191,8 +192,8 @@ void Player::withTracks(const QString &id, int kind, std::function<void(const QL
         done();
 }
 
-void Player::playContainer(const QString &id, int kind, bool shuffle) {
-    withTracks(id, kind, [this, shuffle](const QList<Item> &items) {
+void Player::playContainer(const QString &id, int kind, bool shuffle, const QStringList &members) {
+    withTracks(id, kind, members, [this, shuffle](const QList<Item> &items) {
         // With shuffle requested, start from a random track and let the
         // queue shuffle the rest around it.
         m_switching = true;
@@ -206,8 +207,8 @@ void Player::playContainer(const QString &id, int kind, bool shuffle) {
     });
 }
 
-void Player::addContainer(const QString &id, int kind, bool next) {
-    withTracks(id, kind, [this, next](const QList<Item> &items) {
+void Player::addContainer(const QString &id, int kind, bool next, const QStringList &members) {
+    withTracks(id, kind, members, [this, next](const QList<Item> &items) {
         ItemModel model;
         model.setItems(items);
         addToQueue(&model, -1, next);

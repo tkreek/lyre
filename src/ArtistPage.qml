@@ -14,6 +14,7 @@ FocusScope {
     property string imageTag
     property int year: 0
     property int childCount: 0
+    property var members: []
     property var sourceModel: library.albumsBy(itemId)
     property alias currentIndex: grid.currentIndex
     readonly property bool isQueue: false

@@ -29,6 +29,8 @@ public:
         DurationRole,
         ImageIdRole,
         ImageTagRole,
+        MembersRole,
+        DiscCountRole,
     };
     Q_ENUM(Role)
 

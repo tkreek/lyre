@@ -101,5 +101,10 @@
     "one": "Se añadió %n pista a la cola",
     "many": "Se añadieron %n de pistas a la cola",
     "other": "Se añadieron %n pistas a la cola"
+  },
+  "%n discs": {
+    "one": "%n disco",
+    "many": "%n de discos",
+    "other": "%n discos"
   }
 }

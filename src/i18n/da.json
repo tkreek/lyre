@@ -98,5 +98,9 @@
   "Added %n tracks to the queue": {
     "one": "Føjede %n nummer til køen",
     "other": "Føjede %n numre til køen"
+  },
+  "%n discs": {
+    "one": "%n disk",
+    "other": "%n diske"
   }
 }

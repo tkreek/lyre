@@ -82,8 +82,11 @@ public:
     Q_INVOKABLE void addToQueue(ItemModel *model, int index, bool next = false);
     // The same for an album, playlist, or artist that hasn't been opened:
     // its tracks are fetched first.
-    Q_INVOKABLE void playContainer(const QString &id, int kind, bool shuffle = false);
-    Q_INVOKABLE void addContainer(const QString &id, int kind, bool next = false);
+    // A set of discs passes its discs' album ids as `members`.
+    Q_INVOKABLE void playContainer(const QString &id, int kind, bool shuffle = false,
+                                   const QStringList &members = {});
+    Q_INVOKABLE void addContainer(const QString &id, int kind, bool next = false,
+                                  const QStringList &members = {});
 
     Q_INVOKABLE void playAt(int row);
     Q_INVOKABLE void removeAt(int row);
@@ -120,7 +123,8 @@ private:
     void go(int row, bool autoplay);
     void loadCurrent(bool autoplay);
     void advance(bool automatic);
-    void withTracks(const QString &id, int kind, std::function<void(const QList<Item> &)> use);
+    void withTracks(const QString &id, int kind, const QStringList &members,
+                    std::function<void(const QList<Item> &)> use);
     void updateArt();
     void setError(const QString &error);
     void reportStart();

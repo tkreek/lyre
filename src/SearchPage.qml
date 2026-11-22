@@ -12,10 +12,13 @@ FocusScope {
     readonly property bool isQueue: false
     signal activated(int index)
 
-    function kindLabel(kind, artist, album) {
+    function kindLabel(kind, artist, album, discs) {
         switch (kind) {
         case 3: return qsTr("Artist")
-        case 2: return artist ? qsTr("Album · %1").arg(artist) : qsTr("Album")
+        case 2: {
+            const label = artist ? qsTr("Album · %1").arg(artist) : qsTr("Album")
+            return discs > 1 ? label + " · " + qsTr("%n discs", "", discs) : label
+        }
         case 4: return qsTr("Playlist")
         default: return album ? artist + " — " + album : artist
         }
@@ -77,7 +80,7 @@ FocusScope {
                 width: ListView.view.width - 32
                 number: ""
                 title: model.name
-                subtitle: page.kindLabel(model.kind, model.artist, model.album)
+                subtitle: page.kindLabel(model.kind, model.artist, model.album, model.discCount)
                 duration: model.kind === 1 ? model.duration : 0
                 current: model.kind === 1 && model.itemId === player.currentId
                 selected: ListView.isCurrentItem && list.activeFocus

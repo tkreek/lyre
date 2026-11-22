@@ -86,6 +86,101 @@ private slots:
         QVERIFY(model.get(5).isEmpty());
     }
 
+    // ---- sets of discs
+
+    void discNumbersComeFromNamesAndFolders() {
+        QString base;
+        QCOMPARE(Item::discFromName("Carmen (Disc 2)", &base), 2);
+        QCOMPARE(base, QString("Carmen"));
+        QCOMPARE(Item::discFromName("Messiah [CD 1 of 2]"), 1);
+        QCOMPARE(Item::discFromName("Live at Disco Inferno"), 0);
+        QCOMPARE(Item::discFromName("Abbey Road", &base), 0);
+        QCOMPARE(base, QString("Abbey Road"));
+        QCOMPARE(Item::discFromFolder("Carmen CD 3"), 3);
+        QCOMPARE(Item::discFromFolder("Bach - Brandenburg Concertos [CD2.2]"), 2);
+        QCOMPARE(Item::discFromFolder("Six Suites for Unaccompanied Cello Disc 2"), 2);
+        QCOMPARE(Item::discFromFolder("Debussy - Complete Works (4Cd)"), 0);
+        QCOMPARE(Item::discFromFolder("Bach - Concertos for piano (2 CD)"), 0);
+    }
+
+    void discsOfASetBecomeOneAlbum() {
+        auto album = [](const QString &id, const QString &name, const QString &artist, int tracks,
+                        const QString &path = {}) {
+            return Item::fromJson({{"Id", id}, {"Type", "MusicAlbum"}, {"Name", name}, {"AlbumArtist", artist},
+                                   {"ChildCount", tracks}, {"Path", path}});
+        };
+        const QList<Item> albums{
+            album("abbey", "Abbey Road", "The Beatles", 17),
+            // Listed out of order, and disc 2 credits a different artist.
+            album("b2", "Bach: Brandenburg Concertos (Disc 2)", "J.S. Bach - OAE", 9),
+            album("b1", "Bach: Brandenburg Concertos (Disc 1)", "Bach", 10),
+            album("c1", "Carmen (Disc 1)", "Bizet", 15),
+            album("c2", "Carmen (Disc 2)", "Bizet", 13),
+            album("c3", "Carmen (Disc 3)", "Bizet", 14),
+            // Same name twice; only the folder says which disc.
+            album("y2", "Cello Suites", "Bach", 18, "/m/Yo-Yo Ma/Six Suites Disc 2"),
+            album("y1", "Cello Suites", "Bach", 18, "/m/Yo-Yo Ma/Bach- Six Suites"),
+            // Two artists' first discs of differently-owned sets stay apart.
+            album("g1", "Greatest Hits (Disc 1)", "Artist A", 10),
+            album("h1", "Greatest Hits (Disc 1)", "Artist B", 11),
+            // A lone disc stays as it is.
+            album("j1", "Johannes Passion (Disc 1)", "Bach", 21),
+            // Same name, different artists, no disc markers: not a set.
+            album("m1", "Messiah", "Hogwood", 2),
+            album("m2", "Messiah", "Pinnock", 3),
+        };
+        const QList<Item> grouped = Item::groupDiscSets(albums);
+        QStringList names;
+        for (const auto &item : grouped)
+            names << item.name;
+        QCOMPARE(names, (QStringList{"Abbey Road", "Bach: Brandenburg Concertos", "Carmen", "Cello Suites",
+                                      "Greatest Hits (Disc 1)", "Greatest Hits (Disc 1)",
+                                      "Johannes Passion (Disc 1)", "Messiah", "Messiah"}));
+        QCOMPARE(grouped.at(1).members, (QStringList{"b1", "b2"}));
+        QCOMPARE(grouped.at(2).members, (QStringList{"c1", "c2", "c3"}));
+        QCOMPARE(grouped.at(2).childCount, 42);
+        QCOMPARE(grouped.at(3).members, (QStringList{"y1", "y2"}));
+        QVERIFY(grouped.at(0).members.isEmpty());
+        QVERIFY(grouped.at(6).members.isEmpty());
+    }
+
+    void setTracksPlayDiscByDisc() {
+        auto track = [](const QString &id, const QString &album, int index, int disc) {
+            return Item::fromJson({{"Id", id}, {"Type", "Audio"}, {"AlbumId", album}, {"IndexNumber", index},
+                                   {"ParentIndexNumber", disc}});
+        };
+        // The server sorted by the files' own disc tags, which all say 1.
+        // (Each disc's tracks keep their own numbers.)
+        const QList<Item> fetched{track("c2-1", "c2", 1, 1), track("c1-1", "c1", 1, 1), track("c3-1", "c3", 1, 1),
+                                  track("c1-2", "c1", 2, 1), track("c2-2", "c2", 2, 1)};
+        const QList<Item> ordered = Library::orderSetTracks({"c1", "c2", "c3"}, fetched);
+        QStringList ids;
+        QList<int> discs;
+        for (const auto &item : ordered) {
+            ids << item.id;
+            discs << item.disc;
+        }
+        QCOMPARE(ids, (QStringList{"c1-1", "c1-2", "c2-1", "c2-2", "c3-1"}));
+        QCOMPARE(discs, (QList<int>{1, 1, 2, 2, 3}));
+    }
+
+    void untaggedTracksOrderByFileName() {
+        auto track = [](const QString &name, const QString &file) {
+            return Item::fromJson({{"Id", name}, {"Type", "Audio"}, {"Name", name},
+                                   {"Path", "/m/Carmen CD 3/" + file}});
+        };
+        const QList<Item> fetched{track("A deux cuartos", "11 - A deux cuartos.flac"),
+                                  track("Ecoute", "02 - Ecoute.flac"),
+                                  track("Entracto", "10 - Entracto.flac"),
+                                  track("Bonus", "Bonus.flac")};
+        QCOMPARE(fetched.at(0).index, 11);
+        QCOMPARE(fetched.at(3).index, 0);
+        QStringList order;
+        for (const auto &item : Item::sortAlbumTracks(fetched))
+            order << item.id;
+        QCOMPARE(order, (QStringList{"Ecoute", "Entracto", "A deux cuartos", "Bonus"}));
+    }
+
     // ---- server and session
 
     void serverAddressesNormalize() {
