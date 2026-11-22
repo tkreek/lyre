@@ -103,7 +103,7 @@ Rectangle {
 
         Item { Layout.fillHeight: true }
 
-        // Who's signed in where, small and quiet on their own lines, so
+        // Who's signed in where, small and quiet on a line of its own, so
         // a long name or address isn't squeezed by the buttons.
         Rectangle {
             Layout.fillWidth: true
@@ -111,24 +111,26 @@ Rectangle {
             implicitHeight: 1
             color: theme.selection
         }
-        Label {
+        RowLayout {
             Layout.fillWidth: true
             Layout.leftMargin: 8
             Layout.rightMargin: 8
-            text: jellyfin.userName
-            elide: Text.ElideRight
-            color: theme.muted
-            font.pixelSize: theme.fontSize - 3
-        }
-        Label {
-            Layout.fillWidth: true
-            Layout.leftMargin: 8
-            Layout.rightMargin: 8
-            text: jellyfin.server.replace(/^https?:\/\//, "")
-            elide: Text.ElideMiddle
-            color: theme.muted
-            opacity: 0.7
-            font.pixelSize: theme.fontSize - 4
+            spacing: 0
+            Label {
+                Layout.maximumWidth: parent.width * 0.5
+                text: jellyfin.userName
+                elide: Text.ElideRight
+                color: theme.muted
+                font.pixelSize: theme.fontSize - 3
+            }
+            Label {
+                Layout.fillWidth: true
+                text: " · " + jellyfin.server.replace(/^https?:\/\//, "")
+                elide: Text.ElideRight
+                color: theme.muted
+                opacity: 0.7
+                font.pixelSize: theme.fontSize - 3
+            }
         }
 
         RowLayout {
