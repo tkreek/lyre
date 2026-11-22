@@ -103,8 +103,8 @@ Rectangle {
 
         Item { Layout.fillHeight: true }
 
-        // Who's signed in where, small and quiet on a line of its own, so
-        // a long name or address isn't squeezed by the buttons.
+        // The buttons, then who's signed in where: small and quiet on a line of
+        // its own, so a long name or address isn't squeezed by the buttons.
         Rectangle {
             Layout.fillWidth: true
             Layout.bottomMargin: 8
@@ -113,29 +113,6 @@ Rectangle {
         }
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 8
-            Layout.rightMargin: 8
-            spacing: 0
-            Label {
-                Layout.maximumWidth: parent.width * 0.5
-                text: jellyfin.userName
-                elide: Text.ElideRight
-                color: theme.muted
-                font.pixelSize: theme.fontSize - 3
-            }
-            Label {
-                Layout.fillWidth: true
-                text: " · " + jellyfin.server.replace(/^https?:\/\//, "")
-                elide: Text.ElideRight
-                color: theme.muted
-                opacity: 0.7
-                font.pixelSize: theme.fontSize - 3
-            }
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.topMargin: 2
             spacing: 0
             IconButton {
                 iconName: "help"
@@ -155,6 +132,28 @@ Rectangle {
                 iconSize: 18
                 tip: qsTr("Sign out")
                 onClicked: jellyfin.signOut()
+            }
+        }
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: 8
+            Layout.rightMargin: 8
+            Layout.topMargin: 2
+            spacing: 0
+            Label {
+                Layout.maximumWidth: parent.width * 0.5
+                text: jellyfin.userName
+                elide: Text.ElideRight
+                color: theme.muted
+                font.pixelSize: theme.fontSize - 3
+            }
+            Label {
+                Layout.fillWidth: true
+                text: " · " + jellyfin.server.replace(/^https?:\/\//, "")
+                elide: Text.ElideRight
+                color: theme.muted
+                opacity: 0.7
+                font.pixelSize: theme.fontSize - 3
             }
         }
     }
