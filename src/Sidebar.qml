@@ -105,12 +105,6 @@ Rectangle {
 
         // The buttons, then who's signed in where: small and quiet on a line of
         // its own, so a long name or address isn't squeezed by the buttons.
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.bottomMargin: 8
-            implicitHeight: 1
-            color: theme.selection
-        }
         RowLayout {
             Layout.fillWidth: true
             spacing: 0
