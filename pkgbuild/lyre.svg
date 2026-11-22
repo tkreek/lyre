@@ -1,34 +1,10 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2c2c2f"/>
-      <stop offset="1" stop-color="#161618"/>
-    </linearGradient>
-    <linearGradient id="gold" gradientUnits="userSpaceOnUse" x1="0" y1="110" x2="0" y2="410">
-      <stop offset="0" stop-color="#FFE45C"/>
-      <stop offset="1" stop-color="#FFD60A"/>
-    </linearGradient>
-  </defs>
-
-  <!-- App background, as Omarchy's own app icons draw it -->
-  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)"/>
-
-  <!-- Strings, behind the frame -->
-  <g stroke="#f4efe2" stroke-width="7" stroke-linecap="round">
-    <line x1="212" y1="176" x2="212" y2="368"/>
-    <line x1="241" y1="176" x2="241" y2="368"/>
-    <line x1="271" y1="176" x2="271" y2="368"/>
-    <line x1="300" y1="176" x2="300" y2="368"/>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="#1c1c1e"/>
+  <g fill="none" stroke="#d9d3c7" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M214 384 C 150 360, 132 280, 160 210 C 172 180, 168 150, 140 132"/>
+    <path d="M298 384 C 362 360, 380 280, 352 210 C 340 180, 344 150, 372 132"/>
+    <path d="M168 186 L344 186"/>
+    <path d="M214 384 L298 384"/>
+    <path d="M226 186 L244 384 M256 186 L256 384 M286 186 L268 384" stroke-width="9"/>
   </g>
-
-  <!-- The two horns, curling outward at the top -->
-  <g fill="none" stroke="url(#gold)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M180 384 C 124 356, 106 274, 136 206 C 152 168, 146 138, 112 122"/>
-    <path d="M332 384 C 388 356, 406 274, 376 206 C 360 168, 366 138, 400 122"/>
-    <!-- The yoke across the top -->
-    <path d="M150 172 L362 172"/>
-  </g>
-
-  <!-- The sound box -->
-  <rect x="164" y="362" width="184" height="46" rx="23" fill="url(#gold)"/>
 </svg>
