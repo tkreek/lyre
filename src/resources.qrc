@@ -20,6 +20,7 @@
         <file alias="Sidebar.qml">Sidebar.qml</file>
         <file alias="StatusView.qml">StatusView.qml</file>
         <file alias="TrackRow.qml">TrackRow.qml</file>
+        <file alias="WheelScroll.qml">WheelScroll.qml</file>
         <file alias="icons/add-queue.svg">icons/add-queue.svg</file>
         <file alias="icons/album.svg">icons/album.svg</file>
         <file alias="icons/artist.svg">icons/artist.svg</file>

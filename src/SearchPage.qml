@@ -52,6 +52,8 @@ FocusScope {
             bottomMargin: 24
             highlightMoveDuration: 0
             ScrollBar.vertical: ScrollBar {}
+            maximumFlickVelocity: 8000
+            WheelScroll { flickable: list }
             // Rows usually arrive after the view opens; start on the first one so
             // Enter works straight away.
             onCountChanged: if (currentIndex < 0 && count > 0) currentIndex = 0

@@ -24,6 +24,8 @@ GridView {
     reuseItems: true
     highlightFollowsCurrentItem: false
     ScrollBar.vertical: ScrollBar {}
+    maximumFlickVelocity: 8000
+    WheelScroll { flickable: grid }
 
     // Rows usually arrive after the view opens; start on the first one so
     // Enter works straight away.
