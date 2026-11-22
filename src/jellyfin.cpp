@@ -44,6 +44,18 @@ QString Jellyfin::normalizeServer(const QString &input) {
     return url.toString();
 }
 
+// The server's base address, from the URL the public-info probe finally
+// answered at after any redirects.
+QString Jellyfin::serverFromProbe(const QUrl &finalUrl, const QString &fallback) {
+    const QString suffix = "/System/Info/Public";
+    QString url = finalUrl.adjusted(QUrl::RemoveQuery | QUrl::RemoveFragment).toString();
+    if (!url.endsWith(suffix))
+        return fallback;
+    url.chop(suffix.size());
+    const QString normalized = normalizeServer(url);
+    return normalized.isEmpty() ? fallback : normalized;
+}
+
 Jellyfin::Session Jellyfin::loadSession(const QString &path) {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly))
@@ -131,8 +143,14 @@ void Jellyfin::signIn(const QString &serverInput, const QString &userName, const
             return;
         }
 
+        // A reverse proxy often redirects http to https. GETs follow that,
+        // but a redirected POST loses its body, so the sign-in would reach
+        // the server without credentials. Use wherever the probe ended up.
+        const QString base = serverFromProbe(probe->url(), server);
+        m_session.server = base;
+
         const QJsonObject body{{"Username", userName.trimmed()}, {"Pw", password}};
-        QNetworkReply *auth = m_network.post(request(QUrl(server + "/Users/AuthenticateByName")),
+        QNetworkReply *auth = m_network.post(request(QUrl(base + "/Users/AuthenticateByName")),
                                              QJsonDocument(body).toJson(QJsonDocument::Compact));
         connect(auth, &QNetworkReply::finished, this, [=, this] {
             auth->deleteLater();

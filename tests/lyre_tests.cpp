@@ -96,6 +96,15 @@ private slots:
         QVERIFY(Jellyfin::normalizeServer("ftp://host").isEmpty());
     }
 
+    void redirectedProbeSetsTheServer() {
+        // http://host typed, the proxy redirected to https.
+        QCOMPARE(Jellyfin::serverFromProbe(QUrl("https://jf.example.com/System/Info/Public"), "http://jf.example.com"),
+                 QString("https://jf.example.com"));
+        QCOMPARE(Jellyfin::serverFromProbe(QUrl("https://example.com/jellyfin/System/Info/Public"), "http://x"),
+                 QString("https://example.com/jellyfin"));
+        QCOMPARE(Jellyfin::serverFromProbe(QUrl("https://example.com/elsewhere"), "http://x"), QString("http://x"));
+    }
+
     void sessionIsPrivateAndRoundTrips() {
         QTemporaryDir dir;
         const QString path = dir.filePath("nested/session.json");

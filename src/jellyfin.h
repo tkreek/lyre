@@ -59,6 +59,7 @@ public:
     void verify();
 
     static QString normalizeServer(const QString &input);
+    static QString serverFromProbe(const QUrl &finalUrl, const QString &fallback);
     static Session loadSession(const QString &path);
     static bool saveSession(const QString &path, const Session &session);
 
