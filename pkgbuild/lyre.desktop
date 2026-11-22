@@ -1,0 +1,24 @@
+[Desktop Entry]
+Type=Application
+Name=Lyre
+Name[da]=Lyre
+Name[de]=Lyre
+Name[es_MX]=Lyre
+Name[fr]=Lyre
+GenericName=Music Player
+GenericName[da]=Musikafspiller
+GenericName[de]=Musikplayer
+GenericName[es_MX]=Reproductor de música
+GenericName[fr]=Lecteur de musique
+Comment=Play music from your Jellyfin server
+Comment[da]=Afspil musik fra din Jellyfin-server
+Comment[de]=Musik von deinem Jellyfin-Server abspielen
+Comment[es_MX]=Reproduce música de tu servidor Jellyfin
+Comment[fr]=Écouter la musique de votre serveur Jellyfin
+Exec=lyre
+Icon=lyre
+Terminal=false
+Categories=AudioVideo;Audio;Player;
+Keywords=jellyfin;music;audio;player;
+StartupWMClass=lyre
+SingleMainWindow=true

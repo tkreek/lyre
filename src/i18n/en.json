@@ -1,0 +1,6 @@
+{
+  "%n tracks": { "one": "%n track", "other": "%n tracks" },
+  "%n albums": { "one": "%n album", "other": "%n albums" },
+  "%n min": { "one": "%n min", "other": "%n min" },
+  "Added %n tracks to the queue": { "one": "Added %n track to the queue", "other": "Added %n tracks to the queue" }
+}
