@@ -11,6 +11,7 @@
         <file alias="HelpOverlay.qml">HelpOverlay.qml</file>
         <file alias="IconButton.qml">IconButton.qml</file>
         <file alias="LoginPage.qml">LoginPage.qml</file>
+        <file alias="LyreMark.qml">LyreMark.qml</file>
         <file alias="NowPlayingBar.qml">NowPlayingBar.qml</file>
         <file alias="NowPlayingPage.qml">NowPlayingPage.qml</file>
         <file alias="PlayingBars.qml">PlayingBars.qml</file>

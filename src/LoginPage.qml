@@ -30,6 +30,11 @@ FocusScope {
         width: Math.min(parent.width - 48, 400)
         spacing: 14
 
+        LyreMark {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredWidth: Math.round(theme.fontSize * 5)
+            Layout.preferredHeight: Layout.preferredWidth
+        }
         Label {
             Layout.alignment: Qt.AlignHCenter
             text: "lyre"

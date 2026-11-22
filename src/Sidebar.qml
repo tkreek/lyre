@@ -27,14 +27,21 @@ Rectangle {
         anchors.margins: 12
         spacing: 2
 
-        Label {
-            Layout.leftMargin: 8
+        RowLayout {
+            Layout.leftMargin: 6
             Layout.topMargin: 6
             Layout.bottomMargin: 10
-            text: "lyre"
-            font.pixelSize: Math.round(theme.fontSize * 1.6)
-            font.weight: Font.Bold
-            color: theme.accent
+            spacing: 8
+            LyreMark {
+                Layout.preferredWidth: Math.round(theme.fontSize * 1.9)
+                Layout.preferredHeight: Layout.preferredWidth
+            }
+            Label {
+                text: "lyre"
+                font.pixelSize: Math.round(theme.fontSize * 1.6)
+                font.weight: Font.Bold
+                color: theme.accent
+            }
         }
 
         TextField {
