@@ -103,27 +103,38 @@ Rectangle {
 
         Item { Layout.fillHeight: true }
 
+        // Who's signed in where, small and quiet on their own lines, so
+        // a long name or address isn't squeezed by the buttons.
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.bottomMargin: 8
+            implicitHeight: 1
+            color: theme.selection
+        }
+        Label {
+            Layout.fillWidth: true
+            Layout.leftMargin: 8
+            Layout.rightMargin: 8
+            text: jellyfin.userName
+            elide: Text.ElideRight
+            color: theme.muted
+            font.pixelSize: theme.fontSize - 3
+        }
+        Label {
+            Layout.fillWidth: true
+            Layout.leftMargin: 8
+            Layout.rightMargin: 8
+            text: jellyfin.server.replace(/^https?:\/\//, "")
+            elide: Text.ElideMiddle
+            color: theme.muted
+            opacity: 0.7
+            font.pixelSize: theme.fontSize - 4
+        }
+
         RowLayout {
             Layout.fillWidth: true
+            Layout.topMargin: 2
             spacing: 0
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.leftMargin: 8
-                spacing: 0
-                Label {
-                    Layout.fillWidth: true
-                    text: jellyfin.userName
-                    elide: Text.ElideRight
-                    color: theme.foreground
-                }
-                Label {
-                    Layout.fillWidth: true
-                    text: jellyfin.server.replace(/^https?:\/\//, "")
-                    elide: Text.ElideRight
-                    color: theme.muted
-                    font.pixelSize: theme.fontSize - 3
-                }
-            }
             IconButton {
                 iconName: "help"
                 iconSize: 18
@@ -136,6 +147,7 @@ Rectangle {
                 tip: qsTr("Reload the library (Ctrl+R)")
                 onClicked: library.refresh()
             }
+            Item { Layout.fillWidth: true }
             IconButton {
                 iconName: "logout"
                 iconSize: 18
