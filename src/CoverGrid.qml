@@ -76,17 +76,19 @@ GridView {
             Behavior on scale { NumberAnimation { duration: 120 } }
         }
 
-        Label {
+        MarqueeLabel {
             id: title
             anchors.top: art.bottom
             anchors.topMargin: 8
             x: 8
             width: card.width - 16
             text: card.name
-            elide: Text.ElideRight
             horizontalAlignment: grid.round ? Text.AlignHCenter : Text.AlignLeft
             color: card.selected ? theme.accent : theme.foreground
             font.weight: Font.Medium
+            // A long title scrolls into view under the pointer, or when the
+            // keyboard selects the card.
+            running: hover.hovered || card.selected
         }
         Label {
             anchors.top: title.bottom
