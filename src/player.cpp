@@ -1,6 +1,7 @@
 #include "player.h"
 
 #include <QAudio>
+#include <QAudioDevice>
 #include <QJsonObject>
 #include <QQmlEngine>
 #include <QRandomGenerator>
@@ -19,6 +20,15 @@ constexpr qint64 restartThresholdMs = 3000;
 Player::Player(Jellyfin *jellyfin, Library *library, QObject *parent)
     : QObject(parent), m_jellyfin(jellyfin), m_library(library), m_art(jellyfin->network()) {
     m_media.setAudioOutput(&m_output);
+    // Qt opens the stream on one named output and tells PipeWire not to move
+    // it, so switching speakers in the sound settings would leave Lyre
+    // playing where it started. Follow the system's default output instead.
+    m_output.setDevice(QMediaDevices::defaultAudioOutput());
+    connect(&m_devices, &QMediaDevices::audioOutputsChanged, this, [this] {
+        const QAudioDevice device = QMediaDevices::defaultAudioOutput();
+        if (device != m_output.device())
+            m_output.setDevice(device);
+    });
 
     connect(&m_media, &QMediaPlayer::playbackStateChanged, this, [this](QMediaPlayer::PlaybackState state) {
         if (state == QMediaPlayer::PlayingState) {

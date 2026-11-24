@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QAudioOutput>
+#include <QMediaDevices>
 #include <QMediaPlayer>
 #include <QObject>
 #include <QTimer>
@@ -137,6 +138,7 @@ private:
     Queue m_queue;
     QMediaPlayer m_media;
     QAudioOutput m_output;
+    QMediaDevices m_devices;
     ArtCache m_art;
     QUrl m_artFile;
     QString m_loadedId;
