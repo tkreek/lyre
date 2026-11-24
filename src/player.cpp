@@ -15,6 +15,12 @@ namespace {
 qint64 ticks(qint64 ms) { return ms * 10000; }
 // Past this far into a track, Previous restarts it instead of going back.
 constexpr qint64 restartThresholdMs = 3000;
+// The server's proxy drops a connection that hasn't been read from for a
+// while (nginx's default is a minute), and a paused stream isn't read, so a
+// longer pause than this resumes over a fresh connection.
+constexpr qint64 staleAfterMs = 30000;
+// A stream that breaks again this soon after reconnecting isn't retried.
+constexpr qint64 recoveryWindowMs = 15000;
 }
 
 Player::Player(Jellyfin *jellyfin, Library *library, QObject *parent)
@@ -39,8 +45,10 @@ Player::Player(Jellyfin *jellyfin, Library *library, QObject *parent)
             m_progressTimer.start();
         } else {
             m_progressTimer.stop();
-            if (state == QMediaPlayer::PausedState)
+            if (state == QMediaPlayer::PausedState) {
+                m_pausedFor.start();
                 reportProgress("Pause");
+            }
         }
         emit stateChanged();
     });
@@ -51,12 +59,21 @@ Player::Player(Jellyfin *jellyfin, Library *library, QObject *parent)
             m_buffering = buffering;
             emit bufferingChanged();
         }
-        if (status == QMediaPlayer::EndOfMedia)
+        if (m_resumeAt >= 0 && (status == QMediaPlayer::LoadedMedia || status == QMediaPlayer::BufferedMedia)) {
+            const qint64 at = m_resumeAt;
+            m_resumeAt = -1;
+            m_media.setPosition(at);
+        }
+        // A stream cut off by the network can look like the end of the track.
+        if (status == QMediaPlayer::EndOfMedia && !(position() < duration() - 5000 && recover()))
             advance(true);
     });
     connect(&m_media, &QMediaPlayer::errorOccurred, this, [this](QMediaPlayer::Error error, const QString &text) {
         if (error == QMediaPlayer::NoError)
             return;
+        if (error == QMediaPlayer::ResourceError && m_resumeAt < 0 && recover())
+            return;
+        m_resumeAt = -1;
         setError(tr("Couldn't play “%1”: %2").arg(title(), text));
     });
     connect(&m_media, &QMediaPlayer::positionChanged, this, &Player::positionChanged);
@@ -256,6 +273,7 @@ void Player::clearQueue() {
     m_media.stop();
     m_media.setSource({});
     m_loadedId.clear();
+    m_resumeAt = -1;
     m_switching = true;
     m_queue.clear();
     m_switching = false;
@@ -265,6 +283,8 @@ void Player::clearQueue() {
 void Player::loadCurrent(bool autoplay) {
     reportStopped();
     setError({});
+    m_resumeAt = -1;
+    m_lastRecovery.invalidate();
     const Item track = m_queue.current();
     m_loadedId = track.id;
     if (track.id.isEmpty()) {
@@ -308,8 +328,36 @@ void Player::play() {
         go(0, true);
     else if (m_loadedId.isEmpty() && hasTrack())
         loadCurrent(true);
+    else if (m_media.playbackState() == QMediaPlayer::PausedState && m_pausedFor.isValid() &&
+             m_pausedFor.elapsed() > staleAfterMs)
+        reopen(position(), true);
     else
         m_media.play();
+}
+
+// The same track from the same place, over a new connection. The play
+// session carries on, so the server sees one uninterrupted listen.
+void Player::reopen(qint64 at, bool autoplay) {
+    if (m_loadedId.isEmpty())
+        return;
+    m_resumeAt = at;
+    m_media.setSource(m_jellyfin->streamUrl(m_loadedId));
+    if (autoplay)
+        m_media.play();
+    emit positionChanged();
+}
+
+// When the stream breaks partway through, reconnect where it stopped. Once
+// per stretch of playback: if it breaks again straight away, the problem
+// isn't a stale connection, and the error is shown instead.
+bool Player::recover() {
+    if (m_loadedId.isEmpty() || m_media.position() <= 0)
+        return false;
+    if (m_lastRecovery.isValid() && m_lastRecovery.elapsed() < recoveryWindowMs)
+        return false;
+    m_lastRecovery.start();
+    reopen(m_media.position(), true);
+    return true;
 }
 
 void Player::pause() { m_media.pause(); }
@@ -350,7 +398,11 @@ void Player::seek(qint64 ms) {
     if (!hasTrack())
         return;
     ms = qBound<qint64>(0, ms, qMax<qint64>(0, duration() - 250));
-    m_media.setPosition(ms);
+    // Mid-reconnection the stream isn't open yet; it starts from here instead.
+    if (m_resumeAt >= 0)
+        m_resumeAt = ms;
+    else
+        m_media.setPosition(ms);
     emit seeked(ms);
     reportProgress("TimeUpdate");
 }
@@ -381,7 +433,7 @@ QJsonObject Player::report() const {
         {"ItemId", m_loadedId},
         {"MediaSourceId", m_loadedId},
         {"PlaySessionId", m_playSessionId},
-        {"PositionTicks", ticks(m_media.position())},
+        {"PositionTicks", ticks(position())},
         {"IsPaused", m_media.playbackState() != QMediaPlayer::PlayingState},
         {"IsMuted", m_output.isMuted()},
         {"VolumeLevel", qRound(m_volume * 100)},

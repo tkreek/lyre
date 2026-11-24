@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QAudioOutput>
+#include <QElapsedTimer>
 #include <QMediaDevices>
 #include <QMediaPlayer>
 #include <QObject>
@@ -65,7 +66,7 @@ public:
     // MPRIS's three states.
     QString status() const;
     bool buffering() const { return m_buffering; }
-    qint64 position() const { return m_media.position(); }
+    qint64 position() const { return m_resumeAt >= 0 ? m_resumeAt : m_media.position(); }
     qint64 duration() const;
     double volume() const { return m_volume; }
     bool muted() const { return m_output.isMuted(); }
@@ -123,6 +124,8 @@ signals:
 private:
     void go(int row, bool autoplay);
     void loadCurrent(bool autoplay);
+    void reopen(qint64 at, bool autoplay);
+    bool recover();
     void advance(bool automatic);
     void withTracks(const QString &id, int kind, const QStringList &members,
                     std::function<void(const QList<Item> &)> use);
@@ -149,4 +152,9 @@ private:
     double m_volume = 1.0;
     QString m_error;
     QTimer m_progressTimer;
+    // Where a reopened stream picks up once it has loaded, else -1.
+    qint64 m_resumeAt = -1;
+    // How long playback has been paused, and since the last reconnection.
+    QElapsedTimer m_pausedFor;
+    QElapsedTimer m_lastRecovery;
 };
