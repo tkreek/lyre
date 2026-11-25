@@ -78,16 +78,15 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.topMargin: 10
                         spacing: 8
-                        AccentButton {
+                        ActionButton {
+                            accent: true
                             text: qsTr("Play all")
                             icon.source: "qrc:/icons/play.svg"
                             onClicked: player.playContainer(page.itemId, 3, false)
                         }
-                        Button {
+                        ActionButton {
                             text: qsTr("Shuffle")
-                            flat: true
                             icon.source: "qrc:/icons/shuffle.svg"
-                            focusPolicy: Qt.NoFocus
                             onClicked: player.playContainer(page.itemId, 3, true)
                         }
                     }

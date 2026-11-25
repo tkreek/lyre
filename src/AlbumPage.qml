@@ -156,25 +156,22 @@ FocusScope {
                         Layout.fillWidth: true
                         Layout.topMargin: 10
                         spacing: 8
-                        AccentButton {
+                        ActionButton {
+                            accent: true
                             text: qsTr("Play")
                             icon.source: "qrc:/icons/play.svg"
                             enabled: page.sourceModel.count > 0
                             onClicked: player.playFrom(page.sourceModel, 0)
                         }
-                        Button {
+                        ActionButton {
                             text: qsTr("Shuffle")
-                            flat: true
                             icon.source: "qrc:/icons/shuffle.svg"
-                            focusPolicy: Qt.NoFocus
                             enabled: page.sourceModel.count > 0
                             onClicked: page.shuffle()
                         }
-                        Button {
+                        ActionButton {
                             text: qsTr("Add to queue")
-                            flat: true
                             icon.source: "qrc:/icons/add-queue.svg"
-                            focusPolicy: Qt.NoFocus
                             enabled: page.sourceModel.count > 0
                             onClicked: player.addToQueue(page.sourceModel, -1, false)
                         }
